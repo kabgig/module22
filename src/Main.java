@@ -1,31 +1,43 @@
-
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Main {
-    private static final String URL = "jdbc:postgresql://localhost/testDB?user=postgres&password=2701";
-
-    private static String conok = "Соединение с бд установлено";
-    private static String conerr = "Произошла ошибка подключения к бд";
-
-    public static void main(String[] args) {
-        String sql = "SELECT id FROM test";
-        try (
-                Connection con = DriverManager.getConnection(URL);
-                Statement statement = con.createStatement()
-        ) {
-            System.out.println(String.format("%s", conok));
-            ResultSet resultSet = statement.executeQuery(sql);
-            System.out.println("ID");
-            System.out.println("||------------||");
-            while (resultSet.next()) {
-                System.out.println(resultSet.getInt("ID"));
+public class Main
+{
+    private  final static String  HOST     = "localhost"  ; // сервер базы данных
+    private  final static String  DATABASENAME = "testDB"  ;// имя базы
+    private  final static String  USERNAME = "postgres"; // учетная запись пользователя
+    private  final static String  PASSWORD = "2701"; // пароль
+    public  static void main(String[] args)
+    {
+        List<LoadModel> data = new ArrayList<>();
+        String url="jdbc:postgresql://"+HOST+"/"+DATABASENAME+"?user="+USERNAME+"&password="+PASSWORD;
+        try (Connection connection = DriverManager.getConnection(url, USERNAME, PASSWORD)) {
+            if (connection == null)
+                System.err.println("Нет соединения с БД!");
+            else {
+                System.out.println("Соединение с БД установлено корректно");
+                String SQL = "Select * from test;";
+                //Запрос на получение всех данных
+                try (PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        while (resultSet.next()) {
+                            int i = resultSet.getInt("ID");
+                            if (resultSet.wasNull()) {
+                                System.out.println("NULL");
+                            } else {
+                                System.out.println(i);
+                            }
+                            //Добавляем каждый полученный элемент в наш лист
+                            LoadModel loadModel = new LoadModel();
+                            loadModel.i = i;
+                            data.add(loadModel);
+                        }
+                    }
+                }
             }
-            System.out.println("||------------||");
-
-        } catch (
-                SQLException e) {
-            System.out.println(String.format("%s", conerr));
-            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 }
